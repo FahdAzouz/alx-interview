@@ -5,7 +5,7 @@
 def validUTF8(data):
     '''checks if data is utf8 encoded'''
     def is_continuation(byte):
-    '''Helper function to check if a byte is a valid continuation byte'''
+        '''Helper function to check if a byte is a valid continuation byte'''
         return (byte & 0b11000000) == 0b10000000
 
     i = 0
