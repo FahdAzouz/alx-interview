@@ -10,42 +10,54 @@ const filmEndPoint = 'https://swapi-api.hbtn.io/api/films/' + movieId;
 const requestCharacters = async () => {
   await new Promise(resolve => request(filmEndPoint, (err, res, body) => {
     if (err || res.statusCode !== 200) {
+#!/usr/bin/node
+
+const request = require('request');
+
+const movieId = process.argv[2];
+const filmEndPoint = 'https://swapi-api.hbtn.io/api/films/' + movieId;
+let people = [];
+const names = [];
+
+const requestCharacters = async () => {
+  await new Promise(resolve => request(filmEndPoint, (err, res, body) => {
+    if (err || res.statusCode !== 200) {
       console.error('Error: ', err, '| StatusCode: ', res.statusCode);
     } else {
-      const jbody = JSON.parse(body);
-      people = jbody.characters;
+      const jsonBody = JSON.parse(body);
+      people = jsonBody.characters;
       resolve();
     }
   }));
 };
 
-const requestFilms = async () => {
-  if (people > 0) {
+const requestNames = async () => {
+  if (people.length > 0) {
     for (const p of people) {
       await new Promise(resolve => request(p, (err, res, body) => {
         if (err || res.statusCode !== 200) {
           console.error('Error: ', err, '| StatusCode: ', res.statusCode);
         } else {
-          const jbody = JSON.parse(body);
-          films.push(jbody.name);
+          const jsonBody = JSON.parse(body);
+          names.push(jsonBody.name);
           resolve();
         }
       }));
     }
   } else {
-    console.error('Error : Got no characters to look up');
+    console.error('Error: Got no Characters for some reason');
   }
 };
 
 const getCharNames = async () => {
-  await requestCharacters;
-  await requestFilms;
+  await requestCharacters();
+  await requestNames();
 
-  for (const f of films) {
-    if (f === films[films.length - 1]) {
-      process.stdout.write(f);
+  for (const n of names) {
+    if (n === names[names.length - 1]) {
+      process.stdout.write(n);
     } else {
-      process.stdout.write(f + '\n');
+      process.stdout.write(n + '\n');
     }
   }
 };
