@@ -1,41 +1,53 @@
-#!/usr/bin/env node
+#!/usr/bin/node
 
 const request = require('request');
 
 const movieId = process.argv[2];
-const filmEndPoint = `https://swapi-api.hbtn.io/api/films/${movieId}`;
+const people = [];
+const films = [];
+const filmEndPoint = 'https://swapi-api.hbtn.io/api/films/' + movieId;
 
-const getCharacterName = (url) => {
-  return new Promise((resolve, reject) => {
-    request(url, (err, res, body) => {
-      if (err || res.statusCode !== 200) {
-        reject(new Error(`Error: ${err} | StatusCode: ${res.statusCode}`));
-      } else {
-        const character = JSON.parse(body);
-        resolve(character.name);
-      }
-    });
-  });
-};
-
-const getCharacters = () => {
-  request(filmEndPoint, async (err, res, body) => {
+const requestCharacters = async () => {
+  await new Promise(resolve => request(filmEndPoint, (err, res, body) => {
     if (err || res.statusCode !== 200) {
-      console.error(`Error: ${err} | StatusCode: ${res.statusCode}`);
+      console.error('Error: ', err, '| StatusCode: ', res.statusCode);
     } else {
-      const film = JSON.parse(body);
-      const characterUrls = film.characters;
-
-      for (const url of characterUrls) {
-        try {
-          const name = await getCharacterName(url);
-          console.log(name);
-        } catch (error) {
-          console.error(error.message);
-        }
-      }
+      jbody = JSON.parse(body);
+      people = jbody.characters;
+      resolve();
     }
-  });
+  }));
 };
 
-getCharacters();
+const requestFilms = async () => {
+  if (people > 0) {
+    for (const p of people) {
+      await new Promise(resolve => request(p, (err, res, body) => {
+        if (err || res.statusCode !== 200) {
+          console.error('Error: ', err, '| StatusCode: ', res.statusCode);
+        } else {
+          const jbody = JSON.parse(body);
+          films.push(jbody.name);
+          resolve();
+        }
+      }));
+    }
+  } else {
+    console.error('Error : Got no characters to look up');
+  }
+};
+
+const getCharNames = async () => {
+  await requestCharacters;
+  await requestFilms;
+
+  for (const f of films) {
+    if (f === films[films.length - 1]) {
+      process.stdout.write(f);
+    } else {
+      process.stdout.write(f + '\n');
+    }
+  }
+};
+
+getCharNames();
