@@ -1,65 +1,41 @@
-#!/usr/bin/node
+#!/usr/bin/env node
 
 const request = require('request');
 
 const movieId = process.argv[2];
-let people = [];
-const films = [];
-const filmEndPoint = 'https://swapi-api.hbtn.io/api/films/' + movieId;
+const filmEndPoint = `https://swapi-api.hbtn.io/api/films/${movieId}`;
 
-const requestCharacters = async () => {
-  await new Promise(resolve => request(filmEndPoint, (err, res, body) => {
-    if (err || res.statusCode !== 200) {
-#!/usr/bin/node
-
-const request = require('request');
-
-const movieId = process.argv[2];
-const filmEndPoint = 'https://swapi-api.hbtn.io/api/films/' + movieId;
-let people = [];
-const names = [];
-
-const requestCharacters = async () => {
-  await new Promise(resolve => request(filmEndPoint, (err, res, body) => {
-    if (err || res.statusCode !== 200) {
-      console.error('Error: ', err, '| StatusCode: ', res.statusCode);
-    } else {
-      const jsonBody = JSON.parse(body);
-      people = jsonBody.characters;
-      resolve();
-    }
-  }));
+const getCharacterName = (url) => {
+  return new Promise((resolve, reject) => {
+    request(url, (err, res, body) => {
+      if (err || res.statusCode !== 200) {
+        reject(new Error(`Error: ${err} | StatusCode: ${res.statusCode}`));
+      } else {
+        const character = JSON.parse(body);
+        resolve(character.name);
+      }
+    });
+  });
 };
 
-const requestNames = async () => {
-  if (people.length > 0) {
-    for (const p of people) {
-      await new Promise(resolve => request(p, (err, res, body) => {
-        if (err || res.statusCode !== 200) {
-          console.error('Error: ', err, '| StatusCode: ', res.statusCode);
-        } else {
-          const jsonBody = JSON.parse(body);
-          names.push(jsonBody.name);
-          resolve();
+const getCharacters = () => {
+  request(filmEndPoint, async (err, res, body) => {
+    if (err || res.statusCode !== 200) {
+      console.error(`Error: ${err} | StatusCode: ${res.statusCode}`);
+    } else {
+      const film = JSON.parse(body);
+      const characterUrls = film.characters;
+
+      for (const url of characterUrls) {
+        try {
+          const name = await getCharacterName(url);
+          console.log(name);
+        } catch (error) {
+          console.error(error.message);
         }
-      }));
+      }
     }
-  } else {
-    console.error('Error: Got no Characters for some reason');
-  }
+  });
 };
 
-const getCharNames = async () => {
-  await requestCharacters();
-  await requestNames();
-
-  for (const n of names) {
-    if (n === names[names.length - 1]) {
-      process.stdout.write(n);
-    } else {
-      process.stdout.write(n + '\n');
-    }
-  }
-};
-
-getCharNames();
+getCharacters();
